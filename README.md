@@ -1,6 +1,6 @@
-# app-metis-demo-ghent
+# app_subject_pages
 
-A quick demo of metis for ghent, reuses most of the centrale vindplaats frontend for a fast demo
+LOD infrastructure for stad.gent.
 
 To test locally you can use the following query to get relevant URIs:
 ```sparql
