@@ -77,7 +77,7 @@ services:
     ports:
       - 1111:1111
   cool-uris:
-    image: nvdk/cool-uris:latest
+    image: nvdk/cool-uris:2.1.0
     restart: always
     environment:
       SPARQL_ENDPOINT: http://virtuoso:8890/sparql
