@@ -1,0 +1,86 @@
+x-logging:
+  &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  resource-labels:
+    image: lblod/resource-label-service:0.3.1
+    restart: always
+    environment:
+      DEFAULT_LANGUAGE: 'nil'
+      MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql
+    logging: *default-logging
+  uri-info:
+    image: redpencil/mu-uri-info-service:feature-query-without-aplication-graph
+    restart: always
+    environment:
+      MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql
+  resource-labels-cache:
+    image: semtech/mu-cache:2.0.2
+    restart: always
+    links:
+      - resource-labels:backend
+    environment:
+      MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql      
+  identifier:
+    image: semtech/mu-identifier:1.10.3
+    restart: always
+    environment:
+      SESSION_COOKIE_SECURE: "on"
+      MU_SPARQL_TIMEOUT: "10000"
+      MU_SPARQL_UPDATE_TIMEOUT: "10000"
+    labels:
+      - "logging=true"
+    logging: *default-logging
+    ports:
+      - 8890:80
+    networks:
+      default:
+        aliases:
+          - backend      
+  dispatcher:
+    image: semtech/mu-dispatcher:2.1.0-beta.2
+    restart: always
+    volumes:
+      - ./config/dispatcher:/config:Z
+    labels:
+      - "logging=true"
+    environment:
+      BASE_URI: "https://qa.stad.gent"
+    logging: *default-logging
+  
+  frontend:
+    image: ghcr.io/stadgent/js_subject-pages:0.0.6
+#    image: localhost/frontend-metis-ghent:0.0.9 # theme pager
+#    image: localhost/frontend-metis-ghent:0.0.10 # set page count to 5
+#    image: localhost/frontend-metis-ghent:0.0.12 # improved pager
+#    image: localhost/frontend-metis-ghent:0.0.13 # improved pager
+#    image: localhost/frontend-metis-ghent:0.0.14 # fix pager navigation
+#    image: localhost/frontend-metis-ghent:0.0.15 # responsive table
+#    image: localhost/frontend-metis-ghent:test
+    restart: always
+#    build: ./frontend-metis-ghent
+    environment:
+      EMBER_METIS_BASE_URL: "https://qa.stad.gent/"
+      EMBER_METIS_SERVICE_BASE: "/data"
+      EMBER_MENU_LINKSET_URL: "https://qa.stad.gent/nl/system/menu/lod/linkset"
+    labels:
+      - "logging=true"
+  virtuoso:
+    image: docker.io/redpencil/virtuoso:1.2.0-rc.1
+    restart: always
+    volumes:
+      - ./data/db/:/data/:Z
+    ports:
+      - 1111:1111
+  cool-uris:
+    image: nvdk/cool-uris:latest
+    restart: always
+    environment:
+      SPARQL_ENDPOINT: http://virtuoso:8890/sparql
+    logging: *default-logging
+    ports:
+      - 80:8080
