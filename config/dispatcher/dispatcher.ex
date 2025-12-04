@@ -82,9 +82,12 @@ defmodule Dispatcher do
 #    forward conn, path, "http://frontend/data/view/"
 #  end
 
-#  match "/data/*path", %{ layer: :sparql } do
-#    forward conn, path, "http://virtuoso:8890/data/"
-#  end
+ get "/data/*path", %{ layer: :api_services, accept: %{ sparql: true } } do
+   base_url = System.get_env("BASE_URI") || "https://stad.gent"
+   resource_url = "#{base_url}/id/#{Enum.join(path, "/")}"
+   encoded_resource = URI.encode_www_form(resource_url)
+   forward conn, ["describe?uri=#{encoded_resource}"], "http://uri-info/"
+ end
 
   get "/data/view/*path", %{ layer: :static, accept: %{ html: true } } do
     forward conn, path, "http://frontend/data/"

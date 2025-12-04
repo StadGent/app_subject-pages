@@ -14,7 +14,7 @@ services:
       MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql
     logging: *default-logging
   uri-info:
-    image: redpencil/mu-uri-info-service:feature-query-without-aplication-graph
+    image: redpencil/mu-uri-info-service:feature-describe
     restart: always
     environment:
       MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql
