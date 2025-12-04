@@ -6,18 +6,20 @@ defmodule Dispatcher do
     html: [ "text/html", "application/xhtml+html" ],
     sparql: ["application/sparql-results+json",
              "application/sparql-results+xml",
-             "text/csv",
-             "application/ld+json",
-             "application/rdf+xml",
-             "text/turtle"
             ],
+    rdf: [
+      "application/ld+json",
+      "application/rdf+xml",
+      "text/turtle",
+      "application/n-triples"
+    ]
   ]
 
   @any %{}
   @json %{ accept: %{ json: true } }
   @html %{ accept: %{ html: true } }
 
-  define_layers [ :static, :redirects, :sparql, :api_services, :frontend_fallback, :resources, :not_found ]
+  define_layers [ :redirects, :static, :api_services, :virtuoso,  :fallback, :not_found ]
 
   # REDIRECTS
   # this is a quick hack because the frontend (metis) expects the true uri (with /id) but that goes to cool-uris.
@@ -53,9 +55,17 @@ defmodule Dispatcher do
     forward conn, [], "http://frontend/data/index.html"
   end
 
-  # get "/sparql", %{ layer: :static, accept: %{ html: true} } do
-  #   forward conn, [], "http://frontend/index.html"
-  # end
+  get "/data/view/*path", %{ layer: :static, accept: %{ html: true } } do
+    forward conn, [] , "http://frontend/data/index.html"
+  end
+
+  match "/data/crm/agents/*path", %{ layer: :static, accept: %{ html: true } } do
+    forward conn, [], "http://frontend/data/index.html"
+  end
+
+  match "/data/turtle/*path", %{ layer: :static } do
+    forward conn, path, "http://virtuoso:8890/data/turtle/id/"
+  end
 
   # API SERVICES
   match "/data/resource-labels/*path", %{ layer: :api_services, accept: %{ json: true } } do
@@ -66,57 +76,34 @@ defmodule Dispatcher do
     forward conn, path, "http://uri-info/"
   end
 
-  match "/conductor/*path", %{ layer: :sparql } do
+  get "/data/*path", %{ layer: :api_services, accept: %{ rdf: true } } do
+    base_url = System.get_env("BASE_URI") || "https://stad.gent"
+    resource_url = "#{base_url}/id/#{Enum.join(path, "/")}"
+    encoded_resource = URI.encode_www_form(resource_url)
+    forward conn, ["describe?uri=#{encoded_resource}"], "http://uri-info/"
+  end
+
+  get "/data/*path", %{ layer: :api_services } do
+    # This is in the api_services layer because browsers have broad accept headers
+    # more specific headers will match the more specific targeted routes
+    forward conn, path, "http://virtuoso:8890/data/"
+  end
+
+
+  # VIRTUOSO
+  match "/conductor/*path", %{ layer: :virtuoso } do
     forward conn, path, "http://virtuoso:8890/conductor/"
   end
 
-  match "/sparql/*path", %{ layer: :sparql } do
+  match "/sparql/*path", %{ layer: :virtuoso } do
     forward conn, path, "http://virtuoso:8890/sparql/"
   end
 
-  match "/sparql-graph-crud-auth/*path", %{ layer: :sparql } do
+  match "/sparql-graph-crud-auth/*path", %{ layer: :virtuoso } do
     forward conn, path, "http://virtuoso:8890/sparql-graph-crud-auth"
   end
-    
-#  get "/data/view/*path", %{ layer: :static, accept: %{ html: true } } do
-#    forward conn, path, "http://frontend/data/view/"
-#  end
 
- get "/data/*path", %{ layer: :api_services, accept: %{ sparql: true } } do
-   base_url = System.get_env("BASE_URI") || "https://stad.gent"
-   resource_url = "#{base_url}/id/#{Enum.join(path, "/")}"
-   encoded_resource = URI.encode_www_form(resource_url)
-   forward conn, ["describe?uri=#{encoded_resource}"], "http://uri-info/"
- end
 
-  get "/data/view/*path", %{ layer: :static, accept: %{ html: true } } do
-    forward conn, path, "http://frontend/data/"
-  end
-
-  match "/data/turtle/*path", %{ layer: :sparql } do
-    forward conn, path, "http://virtuoso:8890/data/turtle/id/"
-  end
-
-#  match "/*path", %{ layer: :frontend_fallback, accept: %{ html: true } } do
-#    # We forward path for fastboot
-#    forward conn, path, "http://frontend/"
-#  end
-
-#  match "/data/external*path", %{ layer: :frontend_fallback, accept: %{ html: true } } do
-#    # We forward path for fastboot
-#    forward conn, path, "http://frontend/data/external"
-#  end
-
-  match "/data/crm/agents/*path", %{ layer: :frontend_fallback, accept: %{ html: true } } do
-    # We forward path for fastboot
-    forward conn, path, "http://frontend/data/crm/agents/"
-  end
-
- # fallback routes
-  get "/*path", %{ layer: :frontend_fallback, accept: %{ html: true } } do
-    # We forward path virtuoso
-    forward conn, path, "http://virtuoso:8890/"
-  end
 
   match "/*_", %{ layer: :not_found } do
     send_resp( conn, 404, "Route not found.  See config/dispatcher.ex" )
