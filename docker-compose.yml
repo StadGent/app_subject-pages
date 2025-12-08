@@ -54,15 +54,7 @@ services:
   
   frontend:
     image: ghcr.io/stadgent/js_subject-pages:0.0.6
-#    image: localhost/frontend-metis-ghent:0.0.9 # theme pager
-#    image: localhost/frontend-metis-ghent:0.0.10 # set page count to 5
-#    image: localhost/frontend-metis-ghent:0.0.12 # improved pager
-#    image: localhost/frontend-metis-ghent:0.0.13 # improved pager
-#    image: localhost/frontend-metis-ghent:0.0.14 # fix pager navigation
-#    image: localhost/frontend-metis-ghent:0.0.15 # responsive table
-#    image: localhost/frontend-metis-ghent:test
     restart: always
-#    build: ./frontend-metis-ghent
     environment:
       EMBER_METIS_BASE_URL: "https://qa.stad.gent/"
       EMBER_METIS_SERVICE_BASE: "/data"
@@ -84,3 +76,4 @@ services:
     logging: *default-logging
     ports:
       - 80:8080
+
