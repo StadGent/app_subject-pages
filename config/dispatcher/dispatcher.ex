@@ -99,12 +99,16 @@ defmodule Dispatcher do
     forward conn, path, "http://virtuoso:8890/sparql/"
   end
 
+  match "/sparql-auth", %{ layer: :virtuoso } do
+    forward conn, [], "http://virtuoso:8890/sparql-auth"
+  end
+
   match "/sparql-graph-crud-auth/*path", %{ layer: :virtuoso } do
     forward conn, path, "http://virtuoso:8890/sparql-graph-crud-auth"
   end
 
 
-
+  # fallback
   match "/*_", %{ layer: :not_found } do
     send_resp( conn, 404, "Route not found.  See config/dispatcher.ex" )
   end
