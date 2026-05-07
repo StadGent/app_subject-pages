@@ -62,7 +62,7 @@ services:
     labels:
       - "logging=true"
   virtuoso:
-    image: docker.io/redpencil/virtuoso:1.2.0-rc.1
+    image: docker.io/redpencil/virtuoso:1.2.2
     restart: always
     volumes:
       - ./data/db/:/data/:Z
