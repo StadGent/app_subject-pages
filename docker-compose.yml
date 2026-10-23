@@ -68,6 +68,16 @@ services:
       - ./data/db/:/data/:Z
     ports:
       - 1111:1111
+  sparql-cache:
+    image: redpencil/varnish-post:1.0.0
+    restart: always
+    environment:
+      BACKEND_HOST: virtuoso
+      BACKEND_PORT: 8890
+      CACHE_TTL: 3600s
+    labels:
+      - "logging=true"
+    logging: *default-logging
   cool-uris:
     image: nvdk/cool-uris:2.1.0
     restart: always

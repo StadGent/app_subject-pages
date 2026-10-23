@@ -96,7 +96,7 @@ defmodule Dispatcher do
   end
 
   match "/sparql/*path", %{ layer: :virtuoso } do
-    forward conn, path, "http://virtuoso:8890/sparql/"
+    forward conn, path, "http://sparql-cache/sparql/"
   end
 
   match "/sparql-auth", %{ layer: :virtuoso } do
