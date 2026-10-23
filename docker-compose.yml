@@ -24,7 +24,7 @@ services:
     links:
       - resource-labels:backend
     environment:
-      MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql      
+      MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql
   identifier:
     image: semtech/mu-identifier:1.10.3
     restart: always
@@ -40,7 +40,7 @@ services:
     networks:
       default:
         aliases:
-          - backend      
+          - backend
   dispatcher:
     image: semtech/mu-dispatcher:2.1.0-beta.2
     restart: always
@@ -51,7 +51,7 @@ services:
     environment:
       BASE_URI: "https://qa.stad.gent"
     logging: *default-logging
-  
+
   frontend:
     image: ghcr.io/stadgent/js_subject-pages:1.0.1
     restart: always
@@ -69,12 +69,14 @@ services:
     ports:
       - 1111:1111
   sparql-cache:
-    image: redpencil/varnish-post:1.0.0
+    image: docker.io/redpencil/varnish-post:1.0.0
     restart: always
     environment:
       BACKEND_HOST: virtuoso
       BACKEND_PORT: 8890
       CACHE_TTL: 3600s
+    volumes:
+      - ./config/varnish/default.vcl:/templates/default.vcl:ro
     labels:
       - "logging=true"
     logging: *default-logging
