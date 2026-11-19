@@ -81,7 +81,7 @@ services:
       - "logging=true"
     logging: *default-logging
   cool-uris:
-    image: nvdk/cool-uris:2.1.0
+    image: nvdk/cool-uris:2.1.1
     restart: always
     environment:
       SPARQL_ENDPOINT: http://virtuoso:8890/sparql
